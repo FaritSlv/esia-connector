@@ -2,7 +2,10 @@
 
 namespace Esia\Signer;
 
+use Exception;
 use JsonException;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 class HttpSigner
     extends AbstractSignerPKCS7
@@ -28,28 +31,22 @@ class HttpSigner
      */
     public function sign(string $message): string
     {
-        $data = json_encode(['text' => $message], JSON_THROW_ON_ERROR);
+        $client = new Client();
 
-        $options = [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HEADER         => false,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS      => 10,
-            CURLOPT_ENCODING       => "",
-            CURLOPT_USERAGENT      => "spider",
-            CURLOPT_AUTOREFERER    => true,
-            CURLOPT_CONNECTTIMEOUT => 120,
-            CURLOPT_TIMEOUT        => 120,
-            CURLOPT_CUSTOMREQUEST  => $this->method,
-            CURLOPT_POSTFIELDS     => $data,
-            CURLOPT_HTTPHEADER     => $this->headers
-        ];
+        try {
+            $response = $client->request($this->method, $this->signingServerUrl, [
+                'headers' => $this->headers,
+                'json' => ['text' => $message]
+            ]);
 
-        $ch = curl_init($this->signingServerUrl);
-        curl_setopt_array($ch, $options);
-        $content = curl_exec($ch);
-        curl_close($ch);
+            if ($response->getStatusCode() != 200) {
+                throw new Exception("Error: received HTTP code " . $response->getStatusCode());
+            }
 
-        return $content;
+            return (string) $response->getBody();
+
+        } catch (RequestException $e) {
+            throw new Exception("Error: " . $e->getMessage());
+        }
     }
 }
