@@ -57,4 +57,14 @@ interface ConfigInterface
      * Return an url for logout
      */
     public function getLogoutUrl(): string;
+
+    /**
+     * check version v2
+     */
+    public function isVersionV2(): bool;
+
+    /**
+     * Return on client cert hash
+     */
+    public function getClientCertHash(): ?string;
 }

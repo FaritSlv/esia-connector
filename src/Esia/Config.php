@@ -36,6 +36,8 @@ class Config implements ConfigInterface
 
     protected $token = '';
     protected $oid = '';
+    protected $version = 1;
+    protected ?string $clientCertHash = null;
 
     /**
      * Config constructor.
@@ -80,6 +82,8 @@ class Config implements ConfigInterface
         $this->accessType = $config['accessType'] ?? $this->accessType;
         $this->tmpPath = $config['tmpPath'] ?? $this->tmpPath;
         $this->token = $config['token'] ?? $this->token;
+        $this->version = $config['version'] ?? $this->version;
+        $this->clientCertHash = $config['clientCertHash'] ?? $this->clientCertHash;
     }
 
     public function getPortalUrl(): string
@@ -191,5 +195,15 @@ class Config implements ConfigInterface
     public function getLogoutUrl(): string
     {
         return $this->portalUrl . $this->logoutUrlPath;
+    }
+
+    public function isVersionV2(): bool
+    {
+        return $this->version === 2;
+    }
+
+    public function getClientCertHash(): ?string
+    {
+        return $this->clientCertHash;
     }
 }

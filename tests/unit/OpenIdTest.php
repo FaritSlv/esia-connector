@@ -9,6 +9,7 @@ use Esia\Exceptions\InvalidConfigurationException;
 use Esia\Http\GuzzleHttpClient;
 use Esia\OpenId;
 use Esia\Signer\Exceptions\SignFailException;
+use Esia\Signer\SignerPKCS7;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
@@ -40,8 +41,13 @@ class OpenIdTest extends Unit
         ];
 
         $config = new Config($this->config);
-
         $this->openId = new OpenId($config);
+        $this->openId->setSigner(new SignerPKCS7(
+            $config->getCertPath(),
+            $config->getPrivateKeyPath(),
+            $config->getPrivateKeyPassword(),
+            $config->getTmpPath()
+        ));
     }
 
     /**
@@ -60,7 +66,12 @@ class OpenIdTest extends Unit
             new Response(200, [], '{ "access_token": "test.' . $oidBase64 . '.test"}'),
         ]);
         $openId = new OpenId($config, $client);
-
+        $openId->setSigner(new SignerPKCS7(
+            $config->getCertPath(),
+            $config->getPrivateKeyPath(),
+            $config->getPrivateKeyPassword(),
+            $config->getTmpPath()
+        ));
         $token = $openId->getToken('test');
         self::assertNotEmpty($token);
         self::assertSame($oid, $openId->getConfig()->getOid());
@@ -81,6 +92,12 @@ class OpenIdTest extends Unit
             new Response(200, [], '{"username": "test"}'),
         ]);
         $openId = new OpenId($config, $client);
+        $openId->setSigner(new SignerPKCS7(
+            $config->getCertPath(),
+            $config->getPrivateKeyPath(),
+            $config->getPrivateKeyPassword(),
+            $config->getTmpPath()
+        ));
 
         $info = $openId->getPersonInfo();
         self::assertNotEmpty($info);
@@ -104,6 +121,12 @@ class OpenIdTest extends Unit
             new Response(200, [], '{"email": "test@gmail.com"}'),
         ]);
         $openId = new OpenId($config, $client);
+        $openId->setSigner(new SignerPKCS7(
+            $config->getCertPath(),
+            $config->getPrivateKeyPath(),
+            $config->getPrivateKeyPassword(),
+            $config->getTmpPath()
+        ));
 
         $info = $openId->getContactInfo();
         self::assertNotEmpty($info);
@@ -127,6 +150,12 @@ class OpenIdTest extends Unit
             new Response(200, [], '{"email": "test@gmail.com"}'),
         ]);
         $openId = new OpenId($config, $client);
+        $openId->setSigner(new SignerPKCS7(
+            $config->getCertPath(),
+            $config->getPrivateKeyPath(),
+            $config->getPrivateKeyPassword(),
+            $config->getTmpPath()
+        ));
 
         $info = $openId->getAddressInfo();
         self::assertNotEmpty($info);
@@ -149,7 +178,13 @@ class OpenIdTest extends Unit
             new Response(200, [], '{"phone": "555 555 555"}'),
             new Response(200, [], '{"email": "test@gmail.com"}'),
         ]);
-        $openId = new OpenId($config, $client);
+        $openId = (new OpenId($config, $client));
+        $openId->setSigner(new SignerPKCS7(
+            $config->getCertPath(),
+            $config->getPrivateKeyPath(),
+            $config->getPrivateKeyPassword(),
+            $config->getTmpPath()
+        ));
 
         $info = $openId->getDocInfo();
         self::assertNotEmpty($info);

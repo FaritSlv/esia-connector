@@ -46,5 +46,7 @@ class ConfigWithoutKeyPair
         $this->responseType = $config['responseType'] ?? $this->responseType;
         $this->accessType = $config['accessType'] ?? $this->accessType;
         $this->token = $config['token'] ?? $this->token;
+        $this->version = $config['version'] ?? $this->version;
+        $this->clientCertHash = $config['clientCertHash'] ?? $this->clientCertHash;
     }
 }

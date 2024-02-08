@@ -66,7 +66,7 @@ $config = new \Esia\ConfigWithoutKeyPair([
         'fullname', /* Просмотр вашей фамилии, имени и отчества */
         'id_doc', /* Просмотр данных о вашем документе, удостоверяющем личность */
 
-    ],
+    ]
 ]);
 
 $signer = new Esia\Signer\HttpSigner(
@@ -78,7 +78,8 @@ $signer = new Esia\Signer\HttpSigner(
     'POST',
 );
 
-$esia = new \Esia\OpenIdWithoutSigner($config, null, $signer);
+$esia = new \Esia\OpenId($config);
+$esia->setSigner($signer);
 
 
 $code = $_GET['code'] ?? '';

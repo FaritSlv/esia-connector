@@ -25,14 +25,14 @@ use RuntimeException;
 /**
  * Class OpenId
  */
-class OpenId
+class OpenId implements OpenIdInterface
 {
     use LoggerAwareTrait;
 
     /**
      * @var SignerInterface
      */
-    protected SignerInterface $signer;
+    protected ?SignerInterface $signer = null;
 
     /**
      * Http Client
@@ -55,12 +55,6 @@ class OpenId
         $this->config = $config;
         $this->client = $client ?? new GuzzleHttpClient(new Client());
         $this->logger = new NullLogger();
-        $this->signer = new SignerPKCS7(
-            $config->getCertPath(),
-            $config->getPrivateKeyPath(),
-            $config->getPrivateKeyPassword(),
-            $config->getTmpPath()
-        );
     }
 
     /**
@@ -93,29 +87,35 @@ class OpenId
     {
         $timestamp = $this->getTimeStamp();
         $state = $this->buildState();
-        $message = $this->config->getScopeString()
-            . $timestamp
-            . $this->config->getClientId()
-            . $state;
 
-        $clientSecret = $this->signer->sign($message);
-
-        $url = $this->config->getCodeUrl() . '?%s';
+        if ($this->config->isVersionV2()) {
+            $message = $this->config->getClientId()
+                . $this->config->getScopeString()
+                . $timestamp
+                . $state
+                . $this->config->getRedirectUrl();
+        } else {
+            $message = $this->config->getScopeString()
+                . $timestamp
+                . $this->config->getClientId()
+                . $state;
+        }
 
         $params = [
             'client_id' => $this->config->getClientId(),
-            'client_secret' => $clientSecret,
+            'client_secret' => $this->signer->sign($message),
             'redirect_uri' => $this->config->getRedirectUrl(),
             'scope' => $this->config->getScopeString(),
             'response_type' => $this->config->getResponseType(),
             'state' => $state,
             'access_type' => $this->config->getAccessType(),
             'timestamp' => $timestamp,
+            'client_certificate_hash' => $this->config->getClientCertHash(),
         ];
 
         $request = http_build_query($params);
 
-        return sprintf($url, $request);
+        return sprintf($this->config->getCodeUrl() . '?%s', $request);
     }
 
     /**
@@ -148,24 +148,31 @@ class OpenId
         $timestamp = $this->getTimeStamp();
         $state = $this->buildState();
 
-        $clientSecret = $this->signer->sign(
-            $this->config->getScopeString()
-            . $timestamp
-            . $this->config->getClientId()
-            . $state
-        );
+        if ($this->config->isVersionV2()) {
+            $message = $this->config->getClientId()
+                . $this->config->getScopeString()
+                . $timestamp
+                . $state
+                . $this->config->getRedirectUrl();
+        } else {
+            $message = $this->config->getScopeString()
+                . $timestamp
+                . $this->config->getClientId()
+                . $state;
+        }
 
         $body = [
             'client_id' => $this->config->getClientId(),
             'code' => $code,
             'grant_type' => 'authorization_code',
-            'client_secret' => $clientSecret,
+            'client_secret' => $this->signer->sign($message),
             'state' => $state,
             'redirect_uri' => $this->config->getRedirectUrl(),
             'scope' => $this->config->getScopeString(),
             'timestamp' => $timestamp,
             'token_type' => 'Bearer',
             'refresh_token' => $state,
+            'client_certificate_hash' => $this->config->getClientCertHash(),
         ];
 
         $payload = $this->sendRequest(

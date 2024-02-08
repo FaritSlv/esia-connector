@@ -223,4 +223,22 @@ class ConfigTest extends Unit
 
         $this->assertSame('https://google.com/test', $config->getLogoutUrl());
     }
+    /**
+     * @throws InvalidConfigurationException
+     */
+    public function testIsVersionV2(): void
+    {
+        $config = new Config([
+            'clientId' => 'test',
+            'redirectUrl' => 'http://google.com',
+            'privateKeyPath' => '/tmp',
+            'certPath' => '/tmp',
+            'portalUrl' => 'https://google.com/',
+            'logoutUrlPath' => 'test',
+            'scope' => ['test', 'test2', 'test3'],
+            'version' => 2,
+        ]);
+
+        $this->assertIsBool($config->isVersionV2());
+    }
 }

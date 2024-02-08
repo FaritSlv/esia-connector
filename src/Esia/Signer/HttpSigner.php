@@ -15,12 +15,14 @@ class HttpSigner
      * @param string $signingServerUrl
      * @param array $headers
      * @param string $method
+     * @param array $options
      * @noinspection PhpMissingParentConstructorInspection
      */
     public function __construct(
         private string $signingServerUrl,
         private array $headers,
         private string $method,
+        private array $options = []
     ) {
     }
 
@@ -36,7 +38,12 @@ class HttpSigner
         try {
             $response = $client->request($this->method, $this->signingServerUrl, [
                 'headers' => $this->headers,
-                'json' => ['text' => $message]
+                'json' => [
+                    'data' => $message,
+                    'cert' => $this->options['cert'] ?? null,
+                    'policies' => $this->options['policies'] ?? [],
+                    'encoding' => $this->options['encoding'] ?? null,
+                ]
             ]);
 
             if ($response->getStatusCode() != 200) {

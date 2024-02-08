@@ -4,7 +4,7 @@
 ## Описание
 Компонент для авторизации и получения данных на портале "Госуслуги".
 
-Библиотека основана на `SbWereWolf/esia-connector`, замена стандартной
+Библиотека основана на `SbWereWolf/esia-connector` и `skiexx/esia-connector`, замена стандартной
 PHP функции `file_get_contents` на `cURL`.  
   
 Соответственно этому подписывателю для подписания произвольного
@@ -25,7 +25,7 @@ PHP функции `file_get_contents` на `cURL`.
 
 При помощи [composer](https://getcomposer.org/download/):
 ```
-composer require skiexx/esia-connector
+composer require farit-slv/esia-connector
 ```
 ## Пример использования
 
@@ -72,7 +72,8 @@ $signer = new HttpSigner(
     'POST',
 );
 
-$esia = new \Esia\OpenIdWithoutSigner($config, null, $signer);
+$esia = new \Esia\OpenId($config);
+$esia->setSigner($signer);
 
 <a href="<?=$esia->buildUrl()?>">Войти через портал госуслуги</a>
 ```
@@ -84,7 +85,13 @@ $esia = new \Esia\OpenIdWithoutSigner($config, null, $signer);
 
 ```php
 
-$esia = new \Esia\OpenIdWithoutSigner($config);
+$esia = new \Esia\OpenId($config);
+$esia->setSigner(new \Esia\SignerPKCS7(
+    $config->getCertPath(),
+    $config->getPrivateKeyPath(),
+    $config->getPrivateKeyPassword(),
+    $config->getTmpPath()
+));
 
 // Вы можете использовать токен в дальнейшем вместе с oid 
 $token = $esia->getToken($_GET['code']);
